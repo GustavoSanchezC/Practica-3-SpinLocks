@@ -10,11 +10,11 @@ public class MCSLock implements Lock {
 		QNode next = null;
 	}
 
-	AtomicReference<QNode> tail;
+	AtomicReference<QNode> queue;
 	ThreadLocal<QNode> myNode;
 
 	public MCSLock() {
-		tail = new AtomicReference<QNode>(null);
+		queue = new AtomicReference<QNode>(null);
 		myNode = new ThreadLocal<QNode>() {
 			protected QNode initialValue() {
 				return new QNode();
@@ -30,7 +30,7 @@ public class MCSLock implements Lock {
 	@Override
 	public void lock() {
 		QNode qnode = myNode.get();
-		QNode pred = tail.getAndSet(qnode);
+		QNode pred = queue.getAndSet(qnode);
 		if (pred != null) {
 			qnode.locked = true;
 			pred.next = qnode;
@@ -45,7 +45,7 @@ public class MCSLock implements Lock {
 	public void unlock() {
 		QNode qnode = myNode.get();
 		if (qnode.next == null) {
-			if (tail.compareAndSet(qnode, null))
+			if (queue.compareAndSet(qnode, null))
 				return;
 			while(qnode.next == null){
 				// wait until predecessor fills in its next field
@@ -57,15 +57,18 @@ public class MCSLock implements Lock {
 
 	@Override
 	public boolean tryLock(){
-		return false;
+		lock();
+		return true;
 	}
 
 	@Override
 	public boolean tryLock(long time, TimeUnit unit){
-		return false;
+		lock();
+		return true;
 	}
 
 	@Override
 	public void lockInterruptibly(){
+		lock();
 	}
 }

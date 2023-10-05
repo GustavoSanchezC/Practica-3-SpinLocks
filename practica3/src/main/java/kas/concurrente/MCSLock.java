@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicReference;
     /**
      * Clase MCS Lock que mantiene una LinkedList para hilos esperando a entrar a la sección crítica.
      */
-    public class MCSLock implements Lock {
+    public class MCSLock implements Lock, kas.concurrente.Lock {
 
         /**
          * Clase para representar a un nodo de la lista

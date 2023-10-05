@@ -81,7 +81,7 @@ public class LockTest {
     
     @Test
     void mcsLock() throws InterruptedException {
-        ejecutaPrueba((Lock) new MCSLock());
+        ejecutaPrueba(new MCSLock());
     }
     
     @Test

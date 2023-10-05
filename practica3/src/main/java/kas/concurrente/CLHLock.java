@@ -4,7 +4,6 @@ public class CLHLock implements Lock {
     AtomicReference<QNode> tail;
     ThreadLocal<QNode> myPred;
     ThreadLocal<QNode> myNode;
-
     public CLHLock() {
         tail = new AtomicReference<QNode>(null);
         myNode = ThreadLocal.withInitial(() -> new QNode());
@@ -17,8 +16,8 @@ public class CLHLock implements Lock {
         qnode.locked = true;
         QNode pred = tail.getAndSet(qnode);
         myPred.set(pred);
-        while (pred.locked) {
-            // Espera activamente hasta que el nodo predecesor haya liberado el bloqueo.
+        while (pred != null && pred.locked) {
+            // Espera activamente hasta que sea el siguiente en la cola o hasta que pred sea nulo.
         }
     }
 
@@ -29,6 +28,7 @@ public class CLHLock implements Lock {
         myNode.set(myPred.get());
     }
     private static class QNode {
+
         volatile boolean locked = false;
     }
 }

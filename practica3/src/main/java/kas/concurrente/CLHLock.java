@@ -1,34 +1,38 @@
 package kas.concurrente;
 import java.util.concurrent.atomic.AtomicReference;
+
 public class CLHLock implements Lock {
-    AtomicReference<QNode> tail;
-    ThreadLocal<QNode> myPred;
-    ThreadLocal<QNode> myNode;
+
+    private final AtomicReference<QNode> tail;
+
+    private final ThreadLocal<QNode> myPred;
+    private final ThreadLocal<QNode> myNode;
+
     public CLHLock() {
-        tail = new AtomicReference<QNode>(null);
-        myNode = ThreadLocal.withInitial(() -> new QNode());
+        tail = new AtomicReference<>(new QNode());
+        myNode = ThreadLocal.withInitial(QNode::new);
         myPred = ThreadLocal.withInitial(() -> null);
     }
 
     @Override
     public void lock() {
-        QNode qnode = myNode.get();
-        qnode.locked = true;
-        QNode pred = tail.getAndSet(qnode);
+        QNode node = myNode.get();
+        node.locked = true;
+        QNode pred = tail.getAndSet(node);
         myPred.set(pred);
-        while (pred != null && pred.locked) {
-            // Espera activamente hasta que sea el siguiente en la cola o hasta que pred sea nulo.
+        while (pred.locked) {
+            Thread.yield(); // Permitir que otros hilos se ejecuten
         }
     }
 
     @Override
     public void unlock() {
-        QNode qnode = myNode.get();
-        qnode.locked = false;
+        QNode node = myNode.get();
+        node.locked = false;
         myNode.set(myPred.get());
     }
-    private static class QNode {
 
+    private static class QNode {
         volatile boolean locked = false;
     }
 }
